@@ -1,0 +1,161 @@
+services:
+    laravel.test:
+        build:
+            context: './docker/8.4'
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'sail-8.4/app'
+        container_name: laravel-temporal
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=roadrunner --host=0.0.0.0 --rpc-port=6001 --port='${APP_PORT:-80}'"
+            TEMPORAL_HOST: temporal
+        volumes:
+            - '.:/var/www/html'
+            - './docker/8.4/php.ini:/usr/local/etc/php/conf.d/99-sail.ini'
+        networks:
+            - sail
+        depends_on:
+            - mysql
+            - redis
+        entrypoint: ["/usr/local/bin/wait-for-temporal.sh", "/usr/local/bin/temporal-worker.sh"]
+        command: ["/usr/local/bin/start-container"]
+
+    mysql:
+        image: 'mysql:8.4'
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_EXTRA_OPTIONS: '${MYSQL_EXTRA_OPTIONS:-}'
+        volumes:
+            - 'sail-mysql:/var/lib/mysql'
+            - './docker/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
+    redis:
+        image: 'redis:alpine'
+        ports:
+            - '${FORWARD_REDIS_PORT:-6379}:6379'
+        volumes:
+            - 'sail-redis:/data'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
+
+    # Temporal Service
+    temporal:
+        image: temporalio/auto-setup:1.28
+        container_name: temporal_engine
+        environment:
+            - DB=postgres12
+            - DB_PORT=5432
+            - POSTGRES_USER=temporal
+            - POSTGRES_PWD=temporal
+            - POSTGRES_SEEDS=postgresql
+            - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/dynamicconfig/development.yaml
+            - frontend.enableUpdateWorkflowExecution=true
+            - frontend.enableUpdateWorkflowExecutionAsyncAccepted=true
+            - DEFAULT_NAMESPACE_RETENTION=8760hr # 1 year
+        depends_on:
+            -   postgresql
+        networks:
+            - sail
+        ports:
+            - '${FORWARD_TEMPORAL_PORT:-7233}:7233'
+        volumes:
+            - ./docker/temporal/dynamicconfig:/etc/temporal/dynamicconfig
+            - ./docker/temporal/cert/local:/data/cert
+
+    # PostgreSQL database for Temporal
+    postgresql:
+        container_name: postgresql
+        image: postgres:13
+        environment:
+            POSTGRES_PASSWORD: temporal
+            POSTGRES_USER: temporal
+        networks:
+            - sail
+        expose:
+            - 5432
+        ports:
+            - '${POSTGRES_PORT:-5433}:5432'
+        volumes:
+            - temporal_pgdata:/var/lib/postgresql/data
+
+    # Temporal Admin Tools
+    temporal-admin-tools:
+        container_name: laravel-temporal-admin-tools
+        image: temporalio/admin-tools:1.28
+        environment:
+            TEMPORAL_ADDRESS: 'temporal:${FORWARD_TEMPORAL_PORT:-7233}'
+            TEMPORAL_CLI_ADDRESS: 'temporal:${FORWARD_TEMPORAL_PORT:-7233}'
+        networks:
+            - sail
+        stdin_open: true
+        tty: true
+        depends_on:
+            - temporal
+
+    # Temporal UI
+    temporal-ui:
+        container_name: temporal-ui
+        image: temporalio/ui:2.48.0
+        environment:
+            TEMPORAL_CSRF_COOKIE: true
+            TEMPORAL_ADDRESS: 'temporal:${FORWARD_TEMPORAL_PORT:-7233}'
+            TEMPORAL_CORS_ORIGINS: 'http://localhost:3000,http://temporal.test'
+        networks:
+            - sail
+        ports:
+            - '${FORDWARD_TEMPORAL_UI_PORT:-8088}:8080'
+        depends_on:
+            - temporal
+networks:
+    sail:
+        driver: bridge
+volumes:
+    sail-mysql:
+        driver: local
+    sail-pgsql:
+        driver: local
+    sail-redis:
+        driver: local
+    temporal_pgdata:
+        driver: local
+    ssl_certs:
+        name: shared-ssl-certs
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ${PWD}/docker/local/nginx/ssl
