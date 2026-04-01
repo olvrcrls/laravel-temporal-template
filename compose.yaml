@@ -85,7 +85,7 @@ services:
             - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/dynamicconfig/development.yaml
             - frontend.enableUpdateWorkflowExecution=true
             - frontend.enableUpdateWorkflowExecutionAsyncAccepted=true
-            - DEFAULT_NAMESPACE_RETENTION=8760hr # 1 year
+            - DEFAULT_NAMESPACE_RETENTION=168h
         depends_on:
             -   postgresql
         networks:
