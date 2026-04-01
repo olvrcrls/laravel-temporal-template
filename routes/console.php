@@ -1,5 +1,6 @@
 <?php
 
+use App\Temporal\DataTransferObjects\HelloWorldArgs;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 use Carbon\CarbonInterval;
 use Illuminate\Foundation\Inspiring;
@@ -23,9 +24,9 @@ Artisan::command('workflow:hello', function () {
         ->build(HelloWorldWorkflowInterface::class);
 
     $run = Temporal::workflowClient()
-        ->start($workflow, fake()->unique()->name());
+        ->start($workflow, new HelloWorldArgs(name: fake()->unique()->name()));
 
     $this->info("Hello World workflow started! Run ID: " . $run->getExecution()->getRunID());
 
-    $this->info(sprintf('Result: %s', $run->getResult()));
+    $this->info(sprintf('Result: %s', json_encode($run->getResult())));
 })->purpose('Launch a simple Hello World workflow');

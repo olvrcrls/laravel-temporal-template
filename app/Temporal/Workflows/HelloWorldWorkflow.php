@@ -1,18 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Temporal\Workflows;
 
 use App\Temporal\Activities\Interfaces\GreetingActivityInterface;
+use App\Temporal\DataTransferObjects\HelloWorldArgs;
 use Carbon\CarbonInterval;
 use Generator;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Workflow;
-use Temporal\Workflow\WorkflowInterface;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 
-class HelloWorldWorkflow implements HelloWorldWorkflowInterface
+final readonly class HelloWorldWorkflow implements HelloWorldWorkflowInterface
 {
     protected ActivityProxy|GreetingActivityInterface $greetingActivity;
 
@@ -31,8 +33,13 @@ class HelloWorldWorkflow implements HelloWorldWorkflowInterface
         );
     }
 
-    public function greet(string $name): Generator
+    #[Workflow\WorkflowMethod(name: "HellowWorldWorkflow")]
+    public function handle(HelloWorldArgs $args): Generator
     {
-        return yield $this->greetingActivity->greet(name: $name);
+        $result = yield $this->greetingActivity->greet($args->name);
+
+        return [
+            'greet' => $result
+        ];
     }
 }
