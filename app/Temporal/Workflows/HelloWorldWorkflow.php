@@ -12,7 +12,6 @@ use Carbon\CarbonInterval;
 use Generator;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
-use Temporal\DataConverter\Type;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Workflow;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
