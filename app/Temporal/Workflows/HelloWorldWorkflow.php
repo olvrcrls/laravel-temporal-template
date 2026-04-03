@@ -6,10 +6,13 @@ namespace App\Temporal\Workflows;
 
 use App\Temporal\Activities\Interfaces\GreetingActivityInterface;
 use App\Temporal\DataTransferObjects\HelloWorldArgs;
+use App\Temporal\DataTransferObjects\Workflow\Responses\HelloWorldWorkflowResponse;
+use App\Temporal\ResponseStatus;
 use Carbon\CarbonInterval;
 use Generator;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
+use Temporal\DataConverter\Type;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Workflow;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
@@ -33,13 +36,14 @@ final readonly class HelloWorldWorkflow implements HelloWorldWorkflowInterface
         );
     }
 
-    #[Workflow\WorkflowMethod(name: "HellowWorldWorkflow")]
     public function handle(HelloWorldArgs $args): Generator
     {
         $result = yield $this->greetingActivity->greet($args->name);
 
-        return [
-            'greet' => $result
-        ];
+        return (new HelloWorldWorkflowResponse(
+            result: $result,
+            status: ResponseStatus::SUCCESS,
+            metadata: ['data' => $result]
+        ));
     }
 }
