@@ -14,19 +14,26 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('workflow:hello', function () {
-    $workflow = Temporal::newWorkflow()
-        ->withWorkflowExecutionTimeout(CarbonInterval::hour(12))
-        ->withRetryOptions(
-            RetryOptions::new()
-                ->withMaximumAttempts(1)
-        )
-        ->build(HelloWorldWorkflowInterface::class);
+Artisan::command('workflow:hello {--count=1}', function ($count) {
+    // Limit the number of workflows to 1000
+    if ($count < 1 || $count > 1000) {
+        $count = 1;
+    }
 
-    $run = Temporal::workflowClient()
-        ->start($workflow, new HelloWorldArgs(name: fake()->unique()->name()));
+    do {
+        $workflow = Temporal::newWorkflow()
+            ->withWorkflowExecutionTimeout(CarbonInterval::hour(12))
+            ->withRetryOptions(
+                RetryOptions::new()
+                    ->withMaximumAttempts(1)
+            )
+            ->build(HelloWorldWorkflowInterface::class);
 
-    $this->info("Hello World workflow started! Run ID: " . $run->getExecution()->getRunID());
+        $run = Temporal::workflowClient()
+            ->start($workflow, new HelloWorldArgs(name: fake()->unique()->name()));
 
-    $this->info(sprintf('Result: %s', json_encode($run->getResult())));
+        $this->info("Hello World workflow started! Run ID: " . $run->getExecution()->getRunID());
+
+        $this->info(sprintf('Result: %s', json_encode($run->getResult())));
+    } while (--$count > 0);
 })->purpose('Launch a simple Hello World workflow');

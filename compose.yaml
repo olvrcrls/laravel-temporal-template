@@ -28,7 +28,8 @@ services:
         depends_on:
             - mysql
             - redis
-        entrypoint: ["/usr/local/bin/wait-for-temporal.sh", "/usr/local/bin/temporal-worker.sh"]
+            - temporal
+        entrypoint: ["/usr/local/bin/wait-for-temporal.sh"]
         command: ["/usr/local/bin/start-container"]
 
     mysql:
@@ -96,6 +97,45 @@ services:
             - ./docker/temporal/dynamicconfig:/etc/temporal/dynamicconfig
             - ./docker/temporal/cert/local:/data/cert
 
+    # Temporal Worker
+    temporal-worker:
+        build:
+            context: './docker/8.4'
+            dockerfile: Dockerfile.worker
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'temporal-worker:latest'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            TEMPORAL_ADDRESS: temporal:${FORWARD_TEMPORAL_PORT:-7233}
+            DB_CONNECTION: mysql
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_DATABASE: ${DB_DATABASE}
+            DB_USERNAME: ${DB_USERNAME}
+            DB_PASSWORD: ${DB_PASSWORD}
+            REDIS_HOST: redis
+            CACHE_STORE: redis
+            QUEUE_CONNECTION: redis
+        volumes:
+            - '.:/var/www/html'
+            - './docker/8.4/php.ini:/usr/local/etc/php/conf.d/99-sail.ini'
+            - './docker/8.4/temporal-worker-start.sh:/usr/local/bin/temporal-worker-start.sh'
+        networks:
+            - sail
+        depends_on:
+            - mysql
+            - redis
+            - temporal
+        entrypoint: ["/usr/local/bin/temporal-worker-start.sh"]
+        deploy:
+            replicas: 3
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 3
+            endpoint_mode: vip
+
     # PostgreSQL database for Temporal
     postgresql:
         container_name: postgresql
@@ -128,7 +168,7 @@ services:
 
     # Temporal UI
     temporal-ui:
-        container_name: temporal-ui
+        container_name: 'temporal-ui'
         image: temporalio/ui:2.48.0
         environment:
             TEMPORAL_CSRF_COOKIE: true
