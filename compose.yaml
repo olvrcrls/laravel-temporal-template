@@ -96,7 +96,7 @@ services:
             - ./docker/temporal/cert/local:/data/cert
 
     # Temporal Worker
-    temporal-worker:
+    temporal-default-worker:
         build:
             context: './docker/8.4'
             dockerfile: Dockerfile.worker
@@ -127,7 +127,46 @@ services:
             - temporal
         entrypoint: ["/usr/local/bin/temporal-worker-start.sh"]
         deploy:
-            replicas: 3
+            replicas: 2
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 3
+            endpoint_mode: vip
+
+    # Laravel Application Temporal
+    temporal-laravel-worker:
+        build:
+            context: './docker/8.4'
+            dockerfile: Dockerfile.worker
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'temporal-worker:latest'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            TEMPORAL_ADDRESS: temporal:${FORWARD_TEMPORAL_PORT:-7233}
+            DB_CONNECTION: postgresql
+            DB_HOST: postgresql
+            DB_PORT: 5432
+            DB_DATABASE: temporal
+            DB_USERNAME: temporal
+            DB_PASSWORD: temporal
+            REDIS_HOST: redis
+            CACHE_STORE: redis
+            QUEUE_CONNECTION: redis
+        volumes:
+            - '.:/var/www/html'
+            - './docker/8.4/php.ini:/usr/local/etc/php/conf.d/99-sail.ini'
+            - './docker/8.4/temporal-worker-laravelTemporal.sh:/usr/local/bin/temporal-worker-laravelTemporal.sh'
+        networks:
+            - sail
+        depends_on:
+            - postgresql
+            - redis
+            - temporal
+        entrypoint: [ "/usr/local/bin/temporal-worker-laravelTemporal.sh" ]
+        deploy:
+            replicas: 2
             restart_policy:
                 condition: on-failure
                 delay: 5s

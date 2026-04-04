@@ -22,4 +22,4 @@ if [ ! -f "/var/www/html/.env" ]; then
 fi
 
 # Start the Temporal worker
-exec php artisan temporal:work default --workers=2
+exec php artisan temporal:work laravelTemporal --workers=2
