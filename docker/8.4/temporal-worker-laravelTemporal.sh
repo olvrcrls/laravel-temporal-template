@@ -7,7 +7,7 @@ echo "Starting Temporal Worker..."
 # Check if process is running locally
 if pgrep -f "temporal:work" > /dev/null; then
     echo "Temporal worker process already running!"
-    return 1
+    exit 1
 fi
 
 # Ensure Laravel is set up

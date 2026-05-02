@@ -1,4 +1,4 @@
-#$/bin/bash
+#!/bin/bash
 # temporal-worker.sh
 
 if php artisan temporal:work --workers=2; then

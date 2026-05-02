@@ -12,7 +12,7 @@ use Temporal\Workflow\ReturnType;
 #[WorkflowInterface]
 interface HelloWorldWorkflowInterface
 {
-    #[WorkflowMethod(name: "HellowWorldWorkflow")]
+    #[WorkflowMethod(name: "HelloWorldWorkflow")]
     #[ReturnType(Type::TYPE_OBJECT)]
     public function handle(HelloWorldArgs $args): Generator;
 }

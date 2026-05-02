@@ -187,7 +187,7 @@ services:
         ports:
             - '${POSTGRES_PORT:-5433}:5432'
         volumes:
-            - temporal_pgdata:/var/lib/postgresql/data
+            - sail-pgsql:/var/lib/postgresql/data
 
     # Temporal Admin Tools
     temporal-admin-tools:
@@ -214,7 +214,7 @@ services:
         networks:
             - sail
         ports:
-            - '${FORDWARD_TEMPORAL_UI_PORT:-8088}:8080'
+            - '${FORWARD_TEMPORAL_UI_PORT:-8088}:8080'
         depends_on:
             - temporal
 networks:
@@ -226,8 +226,6 @@ volumes:
     sail-pgsql:
         driver: local
     sail-redis:
-        driver: local
-    temporal_pgdata:
         driver: local
     ssl_certs:
         name: shared-ssl-certs

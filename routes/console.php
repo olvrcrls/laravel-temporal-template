@@ -5,9 +5,7 @@ use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 use Carbon\CarbonInterval;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Str;
 use Keepsuit\LaravelTemporal\Facade\Temporal;
-use Temporal\Client\WorkflowOptions;
 use Temporal\Common\RetryOptions;
 
 Artisan::command('inspire', function () {
