@@ -106,12 +106,7 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             TEMPORAL_ADDRESS: temporal:${FORWARD_TEMPORAL_PORT:-7233}
-            DB_CONNECTION: postgresql
-            DB_HOST: postgresql
-            DB_PORT: 5432
-            DB_DATABASE: temporal
-            DB_USERNAME: temporal
-            DB_PASSWORD: temporal
+            DB_CONNECTION: mysql
             REDIS_HOST: redis
             CACHE_STORE: redis
             QUEUE_CONNECTION: redis
@@ -122,7 +117,7 @@ services:
         networks:
             - sail
         depends_on:
-            - postgresql
+            - mysql
             - redis
             - temporal
         entrypoint: ["/usr/local/bin/temporal-worker-start.sh"]
@@ -145,12 +140,7 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             TEMPORAL_ADDRESS: temporal:${FORWARD_TEMPORAL_PORT:-7233}
-            DB_CONNECTION: postgresql
-            DB_HOST: postgresql
-            DB_PORT: 5432
-            DB_DATABASE: temporal
-            DB_USERNAME: temporal
-            DB_PASSWORD: temporal
+            DB_CONNECTION: mysql
             REDIS_HOST: redis
             CACHE_STORE: redis
             QUEUE_CONNECTION: redis
@@ -187,7 +177,7 @@ services:
         ports:
             - '${POSTGRES_PORT:-5433}:5432'
         volumes:
-            - sail-pgsql:/var/lib/postgresql/data
+            - temporal_pgdata:/var/lib/postgresql/data
 
     # Temporal Admin Tools
     temporal-admin-tools:
@@ -223,9 +213,9 @@ networks:
 volumes:
     sail-mysql:
         driver: local
-    sail-pgsql:
-        driver: local
     sail-redis:
+        driver: local
+    temporal_pgdata:
         driver: local
     ssl_certs:
         name: shared-ssl-certs
