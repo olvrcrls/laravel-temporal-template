@@ -28,7 +28,13 @@ Artisan::command('workflow:hello {--count=1}', function ($count) {
             ->build(HelloWorldWorkflowInterface::class);
 
         $run = Temporal::workflowClient()
-            ->start($workflow, new HelloWorldArgs(name: fake()->unique()->name()));
+            ->start(
+                $workflow,
+                new HelloWorldArgs(
+                    name: fake()->unique()->name(),
+                    email: fake()->unique()->safeEmail(),
+                )
+            );
 
         $this->info("Hello World workflow started! Run ID: " . $run->getExecution()->getRunID());
 

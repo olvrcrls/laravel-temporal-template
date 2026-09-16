@@ -10,6 +10,9 @@ use Temporal\Activity\ActivityMethod;
 #[ActivityInterface(prefix: 'GreetingActivity.')]
 interface GreetingActivityInterface
 {
-    #[ActivityMethod(name: 'greet')]
-    public function greet(string $name): string;
+    #[ActivityMethod(name: 'createAndGreet')]
+    public function greet(string $name, string $email): int;
+
+    #[ActivityMethod(name: 'getUser')]
+    public function getUser(int $id): string;
 }

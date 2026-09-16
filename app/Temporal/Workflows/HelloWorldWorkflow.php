@@ -37,7 +37,13 @@ final readonly class HelloWorldWorkflow implements HelloWorldWorkflowInterface
 
     public function handle(HelloWorldArgs $args): Generator
     {
-        $result = yield $this->greetingActivity->greet($args->name);
+        $userId = yield $this->greetingActivity
+            ->greet(
+                name: $args->name,
+                email: $args->email,
+            );
+
+        $result = yield $this->greetingActivity->getUser(id: $userId);
 
         return (new HelloWorldWorkflowResponse(
             result: $result,

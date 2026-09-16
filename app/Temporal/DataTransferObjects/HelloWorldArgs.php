@@ -9,6 +9,7 @@ use \Spatie\LaravelData\Data;
 class HelloWorldArgs extends Data
 {
     public function __construct(
-        public readonly string $name
+        public readonly string $name,
+        public readonly string $email,
     ) {}
 }
