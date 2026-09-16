@@ -3,6 +3,7 @@
 namespace App\Temporal\Workflows\Interfaces;
 
 use App\Temporal\DataTransferObjects\Workflow\Data\HelloWorldArgs;
+use App\Temporal\DataTransferObjects\Workflow\Data\NestedWorkflowArgs;
 use Generator;
 use Temporal\DataConverter\Type;
 use Temporal\Workflow\ReturnType;
@@ -10,9 +11,9 @@ use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;
 
 #[WorkflowInterface]
-interface HelloWorldWorkflowInterface
+interface NestedWorkflowInterface
 {
-    #[WorkflowMethod(name: "HelloWorldWorkflow")]
+    #[WorkflowMethod(name: "NestedWorkflow")]
     #[ReturnType(Type::TYPE_OBJECT)]
-    public function handle(HelloWorldArgs $args): Generator;
+    public function handle(NestedWorkflowArgs $args): Generator;
 }

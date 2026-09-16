@@ -38,4 +38,13 @@ class GreetingActivity implements GreetingActivityInterface
             $user->name
         );
     }
+
+    #[ActivityMethod(name: 'getUserByName')]
+    public function getUserByName(string $name): ?int
+    {
+        $user = User::query()->where('name', $name)->first(['id']);
+
+        return $user?->id;
+    }
+
 }

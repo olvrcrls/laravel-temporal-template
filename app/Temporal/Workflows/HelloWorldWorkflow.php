@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\Temporal\Workflows;
 
 use App\Temporal\Activities\Interfaces\GreetingActivityInterface;
-use App\Temporal\DataTransferObjects\HelloWorldArgs;
 use App\Temporal\DataTransferObjects\Workflow\Responses\HelloWorldWorkflowResponse;
+use App\Temporal\DataTransferObjects\Workflow\Data\HelloWorldArgs;
 use App\Temporal\ResponseStatus;
+use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 use Carbon\CarbonInterval;
 use Generator;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Workflow;
-use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 
 final readonly class HelloWorldWorkflow implements HelloWorldWorkflowInterface
 {

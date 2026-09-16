@@ -2,7 +2,7 @@
 
 namespace App\Temporal\Workflows\Interfaces;
 
-use App\Temporal\DataTransferObjects\Workflow\Data\HelloWorldArgs;
+use App\Temporal\DataTransferObjects\Workflow\Data\ParentWorkflowArgs;
 use Generator;
 use Temporal\DataConverter\Type;
 use Temporal\Workflow\ReturnType;
@@ -10,9 +10,9 @@ use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;
 
 #[WorkflowInterface]
-interface HelloWorldWorkflowInterface
+interface ChildWorkflowInterface
 {
-    #[WorkflowMethod(name: "HelloWorldWorkflow")]
+    #[WorkflowMethod(name: "ChildWorkflow")]
     #[ReturnType(Type::TYPE_OBJECT)]
-    public function handle(HelloWorldArgs $args): Generator;
+    public function handle(ParentWorkflowArgs $args): Generator;
 }

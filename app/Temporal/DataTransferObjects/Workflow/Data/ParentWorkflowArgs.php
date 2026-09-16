@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Temporal\DataTransferObjects;
+namespace App\Temporal\DataTransferObjects\Workflow\Data;
 
-use \Spatie\LaravelData\Data;
+use Spatie\LaravelData\Data;
 
-class HelloWorldArgs extends Data
+class ParentWorkflowArgs extends Data
 {
     public function __construct(
         public readonly string $name,

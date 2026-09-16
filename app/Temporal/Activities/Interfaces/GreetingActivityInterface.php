@@ -15,4 +15,7 @@ interface GreetingActivityInterface
 
     #[ActivityMethod(name: 'getUser')]
     public function getUser(int $id): string;
+
+    #[ActivityMethod(name: 'getUserByName')]
+    public function getUserByName(string $name): ?int;
 }
