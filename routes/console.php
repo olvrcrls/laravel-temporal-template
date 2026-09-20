@@ -1,8 +1,10 @@
 <?php
 
+use App\Temporal\DataTransferObjects\Workflow\Data\PromiseArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\HelloWorldArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\NestedWorkflowArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\ParentWorkflowArgs;
+use App\Temporal\Workflows\Interfaces\PromiseWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\NestedWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\ParentWorkflowInterface;
@@ -41,8 +43,6 @@ Artisan::command('workflow:hello {--count=1}', function ($count) {
             );
 
         $this->info("Hello World workflow started! Run ID: " . $run->getExecution()->getRunID());
-
-        $this->info(sprintf('Result: %s', json_encode($run->getResult())));
     } while (--$count > 0);
 })->purpose('Launch a simple Hello World workflow');
 
@@ -54,6 +54,7 @@ Artisan::command('workflow:parent_child {--count=1}', function ($count) {
     do {
         $workflow = Temporal::newWorkflow()
             ->withWorkflowExecutionTimeout(CarbonInterval::hours(12))
+            ->withWorkflowRunTimeout(CarbonInterval::minutes(1))
             ->withRetryOptions(
                 RetryOptions::new()
                     ->withMaximumAttempts(1)
@@ -70,8 +71,6 @@ Artisan::command('workflow:parent_child {--count=1}', function ($count) {
             );
 
         $this->info("Parent workflow started! Run ID: " . $run->getExecution()->getRunID());
-
-        $this->info(sprintf('Result: %s', json_encode($run->getResult())));
     } while (--$count > 0);
 })->purpose('Launch a parent-child workflow');
 
@@ -81,12 +80,20 @@ Artisan::command('workflow:nested {--count=1}', function ($count) {
    }
 
     do {
+        $email = fake()->unique()->safeEmail();
         $workflow = Temporal::newWorkflow()
             ->withWorkflowExecutionTimeout(CarbonInterval::hours(12))
             ->withRetryOptions(
                 RetryOptions::new()
                     ->withMaximumAttempts(1)
             )
+            ->withWorkflowId(
+                sprintf(
+                    'NestedWorkflow-%s',
+                    $email
+                )
+            )
+            ->withTaskQueue('laravelTemporal')
             ->build(NestedWorkflowInterface::class);
 
         $run = Temporal::workflowClient()
@@ -94,12 +101,77 @@ Artisan::command('workflow:nested {--count=1}', function ($count) {
                 $workflow,
                 new NestedWorkflowArgs(
                     name: fake()->unique()->name(),
-                    email: fake()->unique()->safeEmail(),
+                    email: $email,
                 )
             );
 
         $this->info("Nested workflow started! Run ID: " . $run->getExecution()->getRunID());
-
-        $this->info(sprintf('Result: %s', json_encode($run->getResult())));
     } while (--$count > 0);
+});
+
+
+Artisan::command('workflow:cron', function () {
+    $email = fake()->unique()->safeEmail();
+    $workflow = Temporal::newWorkflow()
+        ->withCronSchedule('* * * * *')
+        ->withWorkflowExecutionTimeout(CarbonInterval::hours(12))
+        ->withWorkflowRunTimeout(CarbonInterval::minute())
+        ->withRetryOptions(
+            RetryOptions::new()
+                ->withMaximumAttempts(1)
+        )
+        ->withWorkflowId(
+            sprintf(
+                'Cron-NestedWorkflow-%s',
+                $email
+            )
+        )
+        ->withTaskQueue('laravelTemporal')
+        ->build(NestedWorkflowInterface::class);
+
+    $run = Temporal::workflowClient()
+        ->start(
+            $workflow,
+            new NestedWorkflowArgs(
+                name: fake()->unique()->name(),
+                email: $email,
+            )
+        );
+
+    $this->info("Nested workflow started! Run ID: " . $run->getExecution()->getRunID());
+});
+
+Artisan::command('workflow:promise', function () {
+    $name = fake()->unique()->name();
+    $salutation = Arr::random(['Hi', 'Hey', 'Hello', 'Greetings']);
+
+    $workflow = Temporal::newWorkflow()
+        ->withWorkflowExecutionTimeout(CarbonInterval::hours(12))
+        ->withWorkflowRunTimeout(CarbonInterval::minutes(10))
+        ->withRetryOptions(
+            RetryOptions::new()
+                ->withMaximumAttempts(1)
+                ->withMaximumInterval(CarbonInterval::seconds(5))
+                ->withBackoffCoefficient(1.0)
+        )
+        ->withWorkflowId(
+            sprintf(
+                'PromiseWorkflow-%s',
+                $name
+            )
+        )
+        ->withMemo(['memo' => $name])
+        ->build(PromiseWorkflowInterface::class);
+
+    $run = Temporal::workflowClient()
+        ->start(
+            $workflow,
+            new PromiseArgs(
+                name: $name,
+                salutation: $salutation,
+                delay: mt_rand(1,5)
+            ),
+        );
+
+    $this->info("Promise workflow started! Run ID: " . $run->getExecution()->getRunID());
 });
