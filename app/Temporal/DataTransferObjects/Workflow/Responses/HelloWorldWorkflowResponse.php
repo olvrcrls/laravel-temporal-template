@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Temporal\DataTransferObjects\Workflow\Responses;
 
-use App\Temporal\ResponseStatus;
+use App\Temporal\Enums\ResponseStatus;
 use Spatie\LaravelData\Data;
 
 class HelloWorldWorkflowResponse extends Data

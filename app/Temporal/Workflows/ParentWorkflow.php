@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Temporal\Workflows;
 
 use App\Temporal\Activities\Interfaces\GreetingActivityInterface;
-use App\Temporal\DataTransferObjects\Workflow\Responses\HelloWorldWorkflowResponse;
 use App\Temporal\DataTransferObjects\Workflow\Data\ParentWorkflowArgs;
-use App\Temporal\ResponseStatus;
+use App\Temporal\DataTransferObjects\Workflow\Responses\HelloWorldWorkflowResponse;
+use App\Temporal\Enums\ResponseStatus;
 use App\Temporal\Workflows\Interfaces\ChildWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\ParentWorkflowInterface;
 use Carbon\CarbonInterval;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Temporal;
+namespace App\Temporal\Enums;
 
 enum ResponseStatus: string
 {
