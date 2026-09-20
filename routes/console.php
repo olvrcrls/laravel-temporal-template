@@ -1,9 +1,11 @@
 <?php
 
+use App\Temporal\DataTransferObjects\Workflow\Data\OrderArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\PromiseArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\HelloWorldArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\NestedWorkflowArgs;
 use App\Temporal\DataTransferObjects\Workflow\Data\ParentWorkflowArgs;
+use App\Temporal\Workflows\Interfaces\ConstructorWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\PromiseWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\HelloWorldWorkflowInterface;
 use App\Temporal\Workflows\Interfaces\NestedWorkflowInterface;
@@ -109,7 +111,6 @@ Artisan::command('workflow:nested {--count=1}', function ($count) {
     } while (--$count > 0);
 });
 
-
 Artisan::command('workflow:cron', function () {
     $email = fake()->unique()->safeEmail();
     $workflow = Temporal::newWorkflow()
@@ -174,4 +175,42 @@ Artisan::command('workflow:promise', function () {
         );
 
     $this->info("Promise workflow started! Run ID: " . $run->getExecution()->getRunID());
+});
+
+Artisan::command('workflow:constructor', function () {
+    $uuid = fake()->uuid();
+    $amount = fake()->randomNumber();
+    $customer = fake()->unique()->firstName();
+    $fiat = fake()->currencyCode();
+
+    $args = new OrderArgs(
+        id: $uuid,
+        amount: $amount,
+        fiat: $fiat,
+        customer: $customer,
+    );
+
+    $workflow = Temporal::newWorkflow()
+        ->withWorkflowExecutionTimeout(CarbonInterval::hour())
+        ->withWorkflowRunTimeout(CarbonInterval::hour())
+        ->withRetryOptions(
+            RetryOptions::new()
+                ->withMaximumAttempts(1)
+                ->withMaximumInterval(CarbonInterval::seconds(5))
+                ->withBackoffCoefficient(1.0)
+        )
+        ->withMemo($args->toArray())
+        ->withWorkflowId(
+            sprintf(
+                'ConstructorWorkflow-%s-Order-%s',
+                $fiat,
+                $uuid
+            )
+        )
+        ->build(ConstructorWorkflowInterface::class);
+
+    $run = Temporal::workflowClient()
+        ->start($workflow, $args);
+
+    $this->info("Constructor workflow started! Run ID: " . $run->getExecution()->getRunID());
 });
