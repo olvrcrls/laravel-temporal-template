@@ -31,7 +31,6 @@ services:
             - temporal
         entrypoint: ["/usr/local/bin/wait-for-temporal.sh"]
         command: ["/usr/local/bin/start-container"]
-
     mysql:
         image: 'mysql:lts'
         ports:
@@ -57,6 +56,21 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+    # PostgreSQL database for Temporal
+    postgresql:
+        container_name: postgresql
+        image: postgres:13
+        environment:
+            POSTGRES_PASSWORD: temporal
+            POSTGRES_USER: temporal
+        networks:
+            - sail
+        expose:
+            - 5432
+        ports:
+            - '${POSTGRES_PORT:-5433}:5432'
+        volumes:
+            - temporal_pgdata:/var/lib/postgresql/data
     redis:
         image: 'redis:alpine'
         ports:
@@ -117,9 +131,9 @@ services:
         networks:
             - sail
         depends_on:
+            - temporal
             - mysql
             - redis
-            - temporal
         entrypoint: ["/usr/local/bin/temporal-worker-start.sh"]
         deploy:
             replicas: 2
@@ -151,7 +165,7 @@ services:
         networks:
             - sail
         depends_on:
-            - postgresql
+            - mysql
             - redis
             - temporal
         entrypoint: [ "/usr/local/bin/temporal-worker-laravelTemporal.sh" ]
@@ -162,23 +176,6 @@ services:
                 delay: 5s
                 max_attempts: 3
             endpoint_mode: vip
-
-    # PostgreSQL database for Temporal
-    postgresql:
-        container_name: postgresql
-        image: postgres:13
-        environment:
-            POSTGRES_PASSWORD: temporal
-            POSTGRES_USER: temporal
-        networks:
-            - sail
-        expose:
-            - 5432
-        ports:
-            - '${POSTGRES_PORT:-5433}:5432'
-        volumes:
-            - temporal_pgdata:/var/lib/postgresql/data
-
     # Temporal Admin Tools
     temporal-admin-tools:
         container_name: laravel-temporal-admin-tools
