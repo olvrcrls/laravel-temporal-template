@@ -39,13 +39,15 @@ final readonly class ParentWorkflow implements ParentWorkflowInterface
             $child = Workflow::newChildWorkflowStub(ChildWorkflowInterface::class,);
             $childResult = yield $child->handle(args: $args);
 
-            Workflow::getLogger()->info(sprintf('%s result: %s', __CLASS__, $childResult->id));
+            Workflow::getLogger()->info(sprintf('%s child result: %s', __CLASS__, $childResult->id));
 
             $result = yield $this->greetingActivity->getUser(id: $childResult->id);
+
+            Workflow::getLogger()->info(sprintf('%s result: %s', __CLASS__, $result));
         }
 
         return (new HelloWorldWorkflowResponse(
-            result: $result,
+            result: (string) $result,
             status: ResponseStatus::SUCCESS,
             metadata: ['data' => $result]
         ));
