@@ -3,11 +3,20 @@
         "junie",
         "claude_code"
     ],
+    "cloud": true,
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "sail": true,
     "skills": [
-        "laravel-best-practices"
+        "infer-conventions",
+        "deploying-to-cloud",
+        "laravel-best-practices",
+        "testing-best-practices",
+        "octane-development",
+        "tailwindcss-development",
+        "laravel-security",
+        "laravel-specialist",
+        "php-pro"
     ]
 }
