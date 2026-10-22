@@ -61,11 +61,11 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-
-# Protobuf and GRPC
-ENV PROTOBUF_VERSION "3.25.1"
-RUN pecl channel-update pecl.php.net
-RUN pecl install protobuf-${PROTOBUF_VERSION} grpc
+# Protobuf and GRPC using Pie
+# Copy the PIE binary directly into your build stage
+COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
+RUN pie install extport/protobuf
+RUN pie install bsn4/grpc
 
 RUN apt-get purge -y --auto-remove autoconf build-essential \
     && rm -rf /var/lib/apt/lists/*
